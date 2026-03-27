@@ -1,0 +1,16 @@
+# Dependencias (Lo que hace pesado el proyecto)
+node_modules/
+
+# Producción
+build/
+dist/
+
+# Variables de entorno (Seguridad)
+.env
+.env.local
+
+# Logs y archivos de sistema
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
