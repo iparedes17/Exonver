@@ -1,6 +1,6 @@
 import { ExoBtn } from '../App';
 import React, { useState } from 'react';
-import { DEFAULT_LOSS_REASONS } from '../data/constants';
+// loss reasons come from props now
 import { formatCOP, parseCOP } from '../utils/helpers';
 import { Avatar, ContactActions, SectionDiv, NoteItem, Input, Textarea, TaskWarningIcon } from './UI';
 import { PipelineHistory } from './PipelineHistory';
@@ -41,7 +41,7 @@ function parseVehicle(vehicleStr, catalog) {
 }
 
 // ── LOSS REASON MODAL ────────────────────────────────────────────────────────
-function LossReasonModal({ onConfirm, onCancel }) {
+function LossReasonModal({ onConfirm, onCancel, lossReasons=[] }) {
   const [reason, setReason] = useState('');
   const [notes,  setNotes]  = useState('');
   const [err,    setErr]    = useState('');
@@ -67,7 +67,7 @@ function LossReasonModal({ onConfirm, onCancel }) {
           <label style={{ display:'block', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:7 }}>Motivo *</label>
           <select style={{ ...selStyle }} value={reason} onChange={e=>{setReason(e.target.value);setErr('');}}>
             <option value="">— Seleccionar motivo —</option>
-            {DEFAULT_LOSS_REASONS.map(r=><option key={r}>{r}</option>)}
+            {lossReasons.map(r=><option key={r}>{r}</option>)}
           </select>
         </div>
 
@@ -88,7 +88,7 @@ function LossReasonModal({ onConfirm, onCancel }) {
 }
 
 // ── CLIENT MODAL ─────────────────────────────────────────────────────────────
-export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], paymentTypes=[], onClose, onSave, onDelete, onAddNote, onMoveClient, onAddTask, onToggleTask, onDeleteTask, onEditTask, canDelete=true }) {
+export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], paymentTypes=[], taskTypes=[], lossReasons=[], onClose, onSave, onDelete, onAddNote, onMoveClient, onAddTask, onToggleTask, onDeleteTask, onEditTask, canDelete=true }) {
   const [tab,      setTab]      = useState('datos');
   const parsed = parseVehicle(client.vehicle, catalog);
   const [form, setForm] = useState({
@@ -149,7 +149,7 @@ export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAd
 
   return (
     <>
-      {showLossModal && <LossReasonModal onConfirm={handleLossConfirm} onCancel={()=>{ setShowLossModal(false); setPendingStage(null); }}/>}
+      {showLossModal && <LossReasonModal lossReasons={lossReasons} onConfirm={handleLossConfirm} onCancel={()=>{ setShowLossModal(false); setPendingStage(null); }}/>}
 
       <div style={{ position:'fixed', inset:0, background:'rgba(10,12,22,0.82)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:300, padding:16 }}
         onClick={e=>e.target===e.currentTarget&&onClose()}>
@@ -254,7 +254,7 @@ export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAd
             </>}
 
             {tab==='pipeline'&&<><SectionDiv>Historial de movimientos</SectionDiv><PipelineHistory history={client.pipelineHistory||[]} stages={stages}/></>}
-            {tab==='tareas'&&<><SectionDiv>Agenda de tareas</SectionDiv><TasksPanel client={client} onAddTask={t=>onAddTask(client.id,t)} onToggleTask={onToggleTask} onDeleteTask={onDeleteTask} onEditTask={onEditTask}/></>}
+            {tab==='tareas'&&<><SectionDiv>Agenda de tareas</SectionDiv><TasksPanel client={client} taskTypes={taskTypes} onAddTask={t=>onAddTask(client.id,t)} onToggleTask={onToggleTask} onDeleteTask={onDeleteTask} onEditTask={onEditTask}/></>}
             {tab==='notas'&&<>
               <SectionDiv>Historial de notas</SectionDiv>
               {(client.notes||[]).length===0?<p style={{ fontSize:12, color:'var(--text-3)' }}>Sin notas aún.</p>:[...(client.notes||[])].reverse().map(n=><NoteItem key={n.id} note={n}/>)}
@@ -271,7 +271,7 @@ export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAd
 }
 
 // ── NEW CLIENT MODAL ──────────────────────────────────────────────────────────
-export function NewClientModal({ stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], paymentTypes=[], onClose, onCreate }) {
+export function NewClientModal({ stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], paymentTypes=[], lossReasons=[], onClose, onCreate }) {
   const [form, setForm] = useState({
     name:'', phone:'', email:'',
     vehicle:'', vehicleSel:{ brandId:'', refId:'' },
@@ -302,7 +302,7 @@ export function NewClientModal({ stages, catalog=[], allowedBrands=[], isAdmin=f
 
   return (
     <>
-      {showLoss&&<LossReasonModal onConfirm={(r,n)=>{ set('stageId','perdido'); setShowLoss(false); }} onCancel={()=>setShowLoss(false)}/>}
+      {showLoss&&<LossReasonModal lossReasons={lossReasons} onConfirm={(r,n)=>{ set('stageId','perdido'); setShowLoss(false); }} onCancel={()=>setShowLoss(false)}/>}
       <div style={{ position:'fixed', inset:0, background:'rgba(10,12,22,0.82)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:300, padding:16 }}
         onClick={e=>e.target===e.currentTarget&&onClose()}>
         <div className="slide-up" style={{ background:'#1e2333', boxShadow:'-8px -8px 20px rgba(255,255,255,0.04),8px 8px 24px rgba(0,0,0,0.7)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, width:'100%', maxWidth:600, maxHeight:'90vh', display:'flex', flexDirection:'column' }}>

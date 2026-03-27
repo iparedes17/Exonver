@@ -1,6 +1,7 @@
 import { ExoBtn } from '../App';
 import React, { useState, useMemo } from 'react';
 import { CatalogSettings } from './CatalogSettings';
+import { WidgetSettings } from './DashboardWidgets';
 import { ORIGINS } from '../data/constants';
 import { formatDate, daysSince, getNextTask, getCreatedDate } from '../utils/helpers';
 import { StagePill, ContactActions, Avatar, TaskWarningIcon, TempIcon } from './UI';
@@ -609,7 +610,7 @@ function TagList({ items, onAdd, onRemove, placeholder, isAdmin }) {
   );
 }
 
-export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveStage, onReorderStages, catalog=[], onAddBrand, onRemoveBrand, onAddRef, onRemoveRef, onAddYear, onRemoveYear, origins=[], paymentTypes=[], onAddOrigin, onRemoveOrigin, onAddPaymentType, onRemovePaymentType }) {
+export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveStage, onReorderStages, catalog=[], onAddBrand, onRemoveBrand, onAddRef, onRemoveRef, onAddYear, onRemoveYear, origins=[], paymentTypes=[], taskTypes=[], lossReasons=[], onAddOrigin, onRemoveOrigin, onAddPaymentType, onRemovePaymentType, onAddTaskType, onRemoveTaskType, onAddLossReason, onRemoveLossReason, onEditLossReason, enabledWidgets=[], onToggleWidget, currentUserRole='vendedor' }) {
   const [label, setLabel] = useState('');
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);
@@ -692,6 +693,23 @@ export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveSta
           <input className="neu-input" style={{ maxWidth:240 }} placeholder="Nueva etapa..." value={label} onChange={e=>setLabel(e.target.value)} onKeyDown={e=>e.key==='Enter'&&add()}/>
           <ExoBtn size='exo-sm' onClick={add}>+ Agregar</ExoBtn>
         </div>}
+      </ConfigCard>
+
+      {/* Task Types */}
+      <ConfigCard title="📌 Tipos de tarea">
+        <p style={{ fontSize:12, color:'var(--text-3)', marginBottom:14, lineHeight:1.5 }}>Define los tipos de actividades disponibles al crear tareas en el seguimiento.</p>
+        <TagList items={taskTypes} onAdd={onAddTaskType} onRemove={onRemoveTaskType} placeholder="Nuevo tipo de tarea..." isAdmin={isAdmin}/>
+      </ConfigCard>
+
+      {/* Loss Reasons */}
+      <ConfigCard title="❌ Motivos de pérdida">
+        <p style={{ fontSize:12, color:'var(--text-3)', marginBottom:14, lineHeight:1.5 }}>Razones disponibles al marcar un lead como perdido. Obligatorio seleccionar una.</p>
+        <TagList items={lossReasons} onAdd={onAddLossReason} onRemove={onRemoveLossReason} placeholder="Nuevo motivo de pérdida..." isAdmin={isAdmin}/>
+      </ConfigCard>
+
+      {/* Dashboard Widgets */}
+      <ConfigCard title="📊 Widgets del dashboard">
+        <WidgetSettings enabledWidgets={enabledWidgets} onToggle={onToggleWidget} isAdmin={isAdmin} currentUserRole={currentUserRole}/>
       </ConfigCard>
 
       <div style={{ padding:'15px 18px', background:'var(--bg-deep)', boxShadow:'var(--neu-inset)', border:'1px solid var(--border)', borderRadius:12, fontSize:12, color:'var(--text-3)', lineHeight:1.6 }}>

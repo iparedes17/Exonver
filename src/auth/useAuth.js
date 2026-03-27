@@ -26,21 +26,21 @@ export const ROLE_DEFAULTS = {
 const DEFAULT_USERS = [
   {
     id: 'u1', name: 'Administrador', username: 'admin', password: 'admin123',
-    role: 'admin', email: 'admin@exonver.com', active: true,
+    role: 'admin', email: 'admin@exonver.com', cargo: 'Administrador', celular: '', active: true,
     permissions: ROLE_DEFAULTS.admin,
     allowedBrands: [], // admin sees all brands always
     createdAt: new Date().toISOString(),
   },
   {
     id: 'u2', name: 'Carlos Asesor', username: 'carlos', password: 'carlos123',
-    role: 'vendedor', email: 'carlos@exonver.com', active: true,
+    role: 'vendedor', email: 'carlos@exonver.com', cargo: 'Asesor Comercial', celular: '', active: true,
     permissions: ROLE_DEFAULTS.vendedor,
     allowedBrands: ['toyota','mazda','chevrolet'],
     createdAt: new Date().toISOString(),
   },
   {
     id: 'u3', name: 'Gerente General', username: 'gerente', password: 'gerente123',
-    role: 'gerente', email: 'gerente@exonver.com', active: true,
+    role: 'gerente', email: 'gerente@exonver.com', cargo: 'Gerente Comercial', celular: '', active: true,
     permissions: ROLE_DEFAULTS.gerente,
     allowedBrands: [],
     createdAt: new Date().toISOString(),

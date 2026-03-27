@@ -1,42 +1,38 @@
 import { useState, useCallback } from 'react';
-import { DEFAULT_ORIGINS, DEFAULT_PAYMENT_TYPES } from '../data/constants';
-import { load, save } from '../utils/helpers';
+import { DEFAULT_ORIGINS, DEFAULT_PAYMENT_TYPES, DEFAULT_LOSS_REASONS, TASK_TYPES } from '../data/constants';
+import { load, save, generateId } from '../utils/helpers';
+
+const DEFAULT_TASK_TYPES = TASK_TYPES;
 
 export function useConfig() {
-  const [origins,      setOrigins]      = useState(() => load('exv_origins',  DEFAULT_ORIGINS));
-  const [paymentTypes, setPaymentTypes] = useState(() => load('exv_payments', DEFAULT_PAYMENT_TYPES));
+  const [origins,      setOrigins]      = useState(() => load('exv_origins',       DEFAULT_ORIGINS));
+  const [paymentTypes, setPaymentTypes] = useState(() => load('exv_payments',      DEFAULT_PAYMENT_TYPES));
+  const [taskTypes,    setTaskTypes]    = useState(() => load('exv_task_types',    DEFAULT_TASK_TYPES));
+  const [lossReasons,  setLossReasons]  = useState(() => load('exv_loss_reasons',  DEFAULT_LOSS_REASONS));
 
-  const saveOrigins = useCallback((list) => {
-    setOrigins(list); save('exv_origins', list);
-  }, []);
+  // ── Origins ──────────────────────────────────────────────────────────────
+  const addOrigin    = useCallback((label) => { label=label.trim(); if(!label||origins.includes(label))return; const n=[...origins,label]; setOrigins(n); save('exv_origins',n); }, [origins]);
+  const removeOrigin = useCallback((label) => { const n=origins.filter(o=>o!==label); setOrigins(n); save('exv_origins',n); }, [origins]);
 
-  const addOrigin = useCallback((label) => {
-    label = label.trim();
-    if (!label || origins.includes(label)) return;
-    const next = [...origins, label];
-    setOrigins(next); save('exv_origins', next);
-  }, [origins]);
+  // ── Payment types ─────────────────────────────────────────────────────────
+  const addPaymentType    = useCallback((label) => { label=label.trim(); if(!label||paymentTypes.includes(label))return; const n=[...paymentTypes,label]; setPaymentTypes(n); save('exv_payments',n); }, [paymentTypes]);
+  const removePaymentType = useCallback((label) => { const n=paymentTypes.filter(p=>p!==label); setPaymentTypes(n); save('exv_payments',n); }, [paymentTypes]);
 
-  const removeOrigin = useCallback((label) => {
-    const next = origins.filter(o => o !== label);
-    setOrigins(next); save('exv_origins', next);
-  }, [origins]);
+  // ── Task types ────────────────────────────────────────────────────────────
+  const addTaskType    = useCallback((label) => { label=label.trim(); if(!label||taskTypes.includes(label))return; const n=[...taskTypes,label]; setTaskTypes(n); save('exv_task_types',n); }, [taskTypes]);
+  const removeTaskType = useCallback((label) => { const n=taskTypes.filter(t=>t!==label); setTaskTypes(n); save('exv_task_types',n); }, [taskTypes]);
+  const reorderTaskTypes = useCallback((list) => { setTaskTypes(list); save('exv_task_types',list); }, []);
 
-  const savePaymentTypes = useCallback((list) => {
-    setPaymentTypes(list); save('exv_payments', list);
-  }, []);
+  // ── Loss reasons ──────────────────────────────────────────────────────────
+  const addLossReason    = useCallback((label) => { label=label.trim(); if(!label||lossReasons.includes(label))return; const n=[...lossReasons,label]; setLossReasons(n); save('exv_loss_reasons',n); }, [lossReasons]);
+  const removeLossReason = useCallback((label) => { const n=lossReasons.filter(r=>r!==label); setLossReasons(n); save('exv_loss_reasons',n); }, [lossReasons]);
+  const editLossReason   = useCallback((old, newLabel) => { newLabel=newLabel.trim(); if(!newLabel)return; const n=lossReasons.map(r=>r===old?newLabel:r); setLossReasons(n); save('exv_loss_reasons',n); }, [lossReasons]);
 
-  const addPaymentType = useCallback((label) => {
-    label = label.trim();
-    if (!label || paymentTypes.includes(label)) return;
-    const next = [...paymentTypes, label];
-    setPaymentTypes(next); save('exv_payments', next);
-  }, [paymentTypes]);
-
-  const removePaymentType = useCallback((label) => {
-    const next = paymentTypes.filter(p => p !== label);
-    setPaymentTypes(next); save('exv_payments', next);
-  }, [paymentTypes]);
-
-  return { origins, paymentTypes, addOrigin, removeOrigin, addPaymentType, removePaymentType };
+  return {
+    origins, paymentTypes, taskTypes, lossReasons,
+    addOrigin, removeOrigin,
+    addPaymentType, removePaymentType,
+    addTaskType, removeTaskType, reorderTaskTypes,
+    addLossReason, removeLossReason, editLossReason,
+  };
 }

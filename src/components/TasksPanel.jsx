@@ -1,12 +1,13 @@
 import { ExoBtn } from '../App';
 import React, { useState } from 'react';
-import { TASK_TYPES } from '../data/constants';
+import { TASK_TYPES as DEFAULT_TASK_TYPES } from '../data/constants';
 import { DatePicker, TimePicker } from './DateTimePicker';
 import { isTaskOverdue, minutesUntilTask, formatDateTime } from '../utils/helpers';
 import { TaskCheck } from './UI';
 
 
-function EditTaskForm({ task, onSave, onCancel }) {
+function EditTaskForm({ task, taskTypes=DEFAULT_TASK_TYPES, onSave, onCancel }) {
+  const TASK_TYPES = taskTypes;
   const [form, setForm] = useState({
     type: task.type,
     desc: task.desc,
@@ -127,7 +128,8 @@ function TaskItem({ task, onToggle }) {
   );
 }
 
-export function TasksPanel({ client, onAddTask, onToggleTask }) {
+export function TasksPanel({ client, taskTypes, onAddTask, onToggleTask }) {
+  const TASK_TYPES = taskTypes?.length ? taskTypes : DEFAULT_TASK_TYPES;
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ type:'Llamar', desc:'', dueDate:'', dueTime:'09:00', reminderMin:30 });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));

@@ -11,6 +11,9 @@ import { ClientModal, NewClientModal } from './components/ClientModal';
 import { AgendaView } from './components/AgendaView';
 import { KanbanIcon, ListIcon, GearIcon, PlusIcon, ChartIcon, CalIcon } from './components/Icons';
 import { ImportLeadsModal } from './components/ImportLeads';
+import { DashboardWidgets } from './components/DashboardWidgets';
+import { ForecastView } from './components/ForecastView';
+import { useForecast } from './hooks/useForecast';
 
 const UsersIcon = ({s=14}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>;
 const ROLE_COLOR = { admin:'#f472b6', gerente:'#fbbf24', vendedor:'#60a5fa' };
@@ -158,14 +161,18 @@ export default function App() {
   const crm  = useCRM(auth.currentUser?.id);
   const cat  = useCatalog();
   const cfg  = useConfig();
+  const fcast = useForecast();
   const [tab,          setTab]         = useState('kanban');
   const [selected,     setSelected]    = useState(null);
   const [showNew,      setShowNew]     = useState(false);
   const [showChangePw, setShowChangePw]= useState(false);
   const [showProfile,  setShowProfile] = useState(false);
   const [showImport,   setShowImport]   = useState(false);
+  const [enabledWidgets, setEnabledWidgets] = useState(() => { try { const v=localStorage.getItem('exv_widgets'); return v?JSON.parse(v):['leads_hoy','sin_gestionar','citas','pruebas','propuestas','creditos','ranking_asesores']; } catch { return ['leads_hoy','sin_gestionar','citas','pruebas','propuestas','creditos','ranking_asesores']; } });
 
-  if (!auth.currentUser) return <LoginScreen onLogin={auth.login}/>;
+  const toggleWidget = (id) => { setEnabledWidgets(prev => { const next = prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]; localStorage.setItem('exv_widgets',JSON.stringify(next)); return next; }); };
+
+  if (!auth.currentUser) return <LoginScreen onLogin={auth.login}/> ;
 
   const u = auth.currentUser;
   const hasPerm = auth.hasPermission;
@@ -178,6 +185,7 @@ export default function App() {
     hasPerm('ver_agenda')   && { id:'agenda',    label:'Agenda',        Icon:CalIcon    },
     hasPerm('ver_reportes') && { id:'reportes',  label:'Reportes',      Icon:ChartIcon  },
     (u.role==='admin')      && { id:'usuarios',  label:'Usuarios',      Icon:UsersIcon  },
+    (u.role==='admin'||u.role==='gerente') && { id:'forecast', label:'Forecast', Icon:({s=14})=><svg width={s} height={s} viewBox='0 0 24 24' fill='currentColor'><path d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z'/></svg> },
     hasPerm('configuracion')&& { id:'settings',  label:'Configuración', Icon:GearIcon   },
   ].filter(Boolean);
 
@@ -253,19 +261,25 @@ export default function App() {
         </div>
       )}
 
+      {/* ── DASHBOARD WIDGETS ── */}
+      {hasPerm('ver_pipeline') && enabledWidgets.length > 0 && (
+        <DashboardWidgets clients={crm.allClients} stages={crm.stages} users={auth.users} currentUser={u} enabledWidgets={enabledWidgets}/>
+      )}
+
       {/* ── VIEWS ── */}
-      <div className="main-content" style={{ paddingTop:16 }}>
+      <div className="main-content" style={{ paddingTop:4 }}>
         {validTab==='kanban'   && <KanbanBoard stages={crm.stages} clients={crm.clients} onClientClick={setSelected}/>}
         {validTab==='lista'    && <ClientList  stages={crm.stages} clients={crm.clients} onClientClick={setSelected} origins={cfg.origins}/>}
         {validTab==='agenda'   && <AgendaView  clients={crm.clients} onClientClick={c=>{ setSelected(c); setTab('kanban'); }}/>}
         {validTab==='reportes' && <ReportsView stages={crm.stages} clients={crm.allClients} users={auth.users} currentUser={u}/>}
         {validTab==='usuarios' && <UsersView   users={auth.users} currentUser={u} catalog={cat.catalog} onCreateUser={auth.createUser} onUpdateUser={auth.updateUser} onDeleteUser={auth.deleteUser}/>}
-        {validTab==='settings' && <SettingsView stages={crm.stages} clients={crm.clients} isAdmin={u.role==='admin'} onAddStage={crm.addStage} onRemoveStage={crm.removeStage} onReorderStages={crm.reorderStages} catalog={cat.catalog} onAddBrand={cat.addBrand} onRemoveBrand={cat.removeBrand} onAddRef={cat.addRef} onRemoveRef={cat.removeRef} onAddYear={cat.addYear} onRemoveYear={cat.removeYear} origins={cfg.origins} paymentTypes={cfg.paymentTypes} onAddOrigin={cfg.addOrigin} onRemoveOrigin={cfg.removeOrigin} onAddPaymentType={cfg.addPaymentType} onRemovePaymentType={cfg.removePaymentType}/>}
+        {validTab==='forecast' && <ForecastView currentUser={u} users={auth.users} allClients={crm.allClients} getForecast={fcast.getForecast} setForecast={fcast.setForecast} getActual={fcast.getActual}/>}
+        {validTab==='settings' && <SettingsView stages={crm.stages} clients={crm.clients} isAdmin={u.role==='admin'} onAddStage={crm.addStage} onRemoveStage={crm.removeStage} onReorderStages={crm.reorderStages} catalog={cat.catalog} onAddBrand={cat.addBrand} onRemoveBrand={cat.removeBrand} onAddRef={cat.addRef} onRemoveRef={cat.removeRef} onAddYear={cat.addYear} onRemoveYear={cat.removeYear} origins={cfg.origins} paymentTypes={cfg.paymentTypes} taskTypes={cfg.taskTypes} lossReasons={cfg.lossReasons} onAddOrigin={cfg.addOrigin} onRemoveOrigin={cfg.removeOrigin} onAddPaymentType={cfg.addPaymentType} onRemovePaymentType={cfg.removePaymentType} onAddTaskType={cfg.addTaskType} onRemoveTaskType={cfg.removeTaskType} onAddLossReason={cfg.addLossReason} onRemoveLossReason={cfg.removeLossReason} onEditLossReason={cfg.editLossReason} enabledWidgets={enabledWidgets} onToggleWidget={toggleWidget} currentUserRole={u.role}/>}
       </div>
 
       {/* ── MODALS ── */}
       {selectedFull&&(
-        <ClientModal client={selectedFull} stages={crm.stages} catalog={cat.catalog} allowedBrands={u.allowedBrands||[]} isAdmin={u.role==='admin'} origins={cfg.origins} paymentTypes={cfg.paymentTypes} canDelete={canDel} onClose={()=>setSelected(null)} onSave={(id,form)=>{ crm.updateClient(id,form); setSelected(null); }} onDelete={id=>{ crm.deleteClient(id); setSelected(null); }} onAddNote={crm.addNote} onMoveClient={crm.moveClient} onAddTask={crm.addTask} onToggleTask={crm.toggleTask} onDeleteTask={crm.deleteTask} onEditTask={crm.editTask}/>
+        <ClientModal client={selectedFull} stages={crm.stages} catalog={cat.catalog} allowedBrands={u.allowedBrands||[]} isAdmin={u.role==='admin'} origins={cfg.origins} paymentTypes={cfg.paymentTypes} taskTypes={cfg.taskTypes} lossReasons={cfg.lossReasons} canDelete={canDel} onClose={()=>setSelected(null)} onSave={(id,form)=>{ crm.updateClient(id,form); setSelected(null); }} onDelete={id=>{ crm.deleteClient(id); setSelected(null); }} onAddNote={crm.addNote} onMoveClient={crm.moveClient} onAddTask={crm.addTask} onToggleTask={crm.toggleTask} onDeleteTask={crm.deleteTask} onEditTask={crm.editTask}/>
       )}
       {showNew&&hasPerm('crear_clientes')&&(
         <NewClientModal stages={crm.stages} catalog={cat.catalog} allowedBrands={u.allowedBrands||[]} isAdmin={u.role==='admin'} origins={cfg.origins} paymentTypes={cfg.paymentTypes} onClose={()=>setShowNew(false)} onCreate={form=>{ crm.createClient(form); setShowNew(false); }}/>

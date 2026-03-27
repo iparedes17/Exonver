@@ -25,6 +25,8 @@ function UserForm({ initial, onSave, onCancel, isAdmin, catalog=[] }) {
     active:        initial?.active   !== false,
     permissions:   initial?.permissions   || ROLE_DEFAULTS['vendedor'],
     allowedBrands: initial?.allowedBrands || [],
+    cargo:         initial?.cargo         || '',
+    celular:       initial?.celular       || '',
   });
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
 
@@ -181,7 +183,7 @@ export function UsersView({ users, currentUser, onCreateUser, onUpdateUser, onDe
                   {!user.active&&<span style={{ fontSize:9, fontWeight:700, color:'#f87171', background:'rgba(248,113,113,0.1)', border:'1px solid rgba(248,113,113,0.2)', borderRadius:6, padding:'1px 7px', textTransform:'uppercase' }}>Inactivo</span>}
                 </div>
                 <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', display:'flex', gap:14, flexWrap:'wrap' }}>
-                  <span>@{user.username}</span>{user.email&&<span>{user.email}</span>}<span>{(user.permissions||[]).length} permisos</span>
+                  <span>@{user.username}</span>{user.cargo&&<span>{user.cargo}</span>}{user.celular&&<span>📱{user.celular}</span>}<span>{(user.permissions||[]).length} permisos</span>
                 </div>
               </div>
               {isAdmin && (
