@@ -146,13 +146,75 @@ function KanbanCol({ stage, clients, onClick }) {
   );
 }
 
+const PRIORITY_FILTERS = [
+  { id:'all',       label:'Todos',             icon:'⬛' },
+  { id:'new_today', label:'Nuevos hoy',         icon:'🆕' },
+  { id:'no_mgmt',   label:'Sin gestionar',      icon:'⏳' },
+  { id:'cita_hoy',  label:'Citas hoy',          icon:'📅' },
+  { id:'prueba',    label:'Prueba de manejo',   icon:'🚗' },
+  { id:'propuesta', label:'Propuestas',          icon:'📋' },
+  { id:'credito',   label:'En crédito',         icon:'💳' },
+];
+
+function filterClients(clients, filterId) {
+  const today = new Date().toISOString().split('T')[0];
+  const now   = new Date();
+  switch(filterId) {
+    case 'new_today': return clients.filter(c=>{
+      const first=(c.pipelineHistory||[])[0];
+      return first?.date?.startsWith(today);
+    });
+    case 'no_mgmt':  return clients.filter(c=>{
+      if(c.stageId==='cerrado'||c.stageId==='perdido') return false;
+      return daysSince(c.lastContact)>=1;
+    });
+    case 'cita_hoy': return clients.filter(c=>{
+      const next=getNextTask(c.tasks);
+      return next?.dueDate===today;
+    });
+    case 'prueba':    return clients.filter(c=>c.stageId==='prueba');
+    case 'propuesta': return clients.filter(c=>c.stageId==='propuesta');
+    case 'credito':   return clients.filter(c=>c.stageId==='credito');
+    default:          return clients;
+  }
+}
+
 export function KanbanBoard({ stages, clients, onClientClick }) {
+  const [activeFilter, setActiveFilter] = React.useState('all');
+  const filtered = filterClients(clients, activeFilter);
+
   return (
-    <div style={{ overflowX:'auto', padding:'4px 20px 28px' }}>
-      <div style={{ display:'flex', gap:12, minWidth:'max-content', paddingBottom:8, alignItems:'flex-start' }}>
-        {stages.map(s=>(
-          <KanbanCol key={s.id} stage={s} clients={clients.filter(c=>c.stageId===s.id)} onClick={onClientClick}/>
-        ))}
+    <div>
+      {/* Priority filter bar */}
+      <div style={{ padding:'0 20px 12px', display:'flex', gap:6, overflowX:'auto', flexWrap:'nowrap' }}>
+        {PRIORITY_FILTERS.map(f => {
+          const count = f.id==='all' ? clients.length : filterClients(clients, f.id).length;
+          const active = activeFilter===f.id;
+          return (
+            <button key={f.id} onClick={()=>setActiveFilter(f.id)} style={{
+              padding:'5px 12px', borderRadius:20, cursor:'pointer',
+              fontFamily:'DM Sans,sans-serif', fontSize:11, fontWeight:active?700:400,
+              transition:'all .15s', flexShrink:0, whiteSpace:'nowrap',
+              background: active?'#005da5':'rgba(255,255,255,0.05)',
+              color: active?'#fff':'var(--text-3)',
+              border: active?'1px solid rgba(0,93,165,0.6)':'1px solid rgba(255,255,255,0.08)',
+              boxShadow: active?'0 0 10px rgba(0,93,165,0.3)':'none',
+              display:'flex', alignItems:'center', gap:5,
+            }}>
+              <span>{f.icon}</span>
+              {f.label}
+              <span style={{ fontSize:10, opacity:0.8, background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'0 5px', minWidth:18, textAlign:'center' }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ overflowX:'auto', padding:'0 20px 28px' }}>
+        <div style={{ display:'flex', gap:12, minWidth:'max-content', paddingBottom:8, alignItems:'flex-start' }}>
+          {stages.map(s=>(
+            <KanbanCol key={s.id} stage={s} clients={filtered.filter(c=>c.stageId===s.id)} onClick={onClientClick}/>
+          ))}
+        </div>
       </div>
     </div>
   );

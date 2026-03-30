@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { CatalogSettings } from './CatalogSettings';
 import { WidgetSettings } from './DashboardWidgets';
 import { OriginsSettings } from './OriginsSettings';
+import { BodegasSettings } from './BodegasSettings';
 import { ORIGINS } from '../data/constants';
 import { formatDate, daysSince, getNextTask, getCreatedDate } from '../utils/helpers';
 import { StagePill, ContactActions, Avatar, TaskWarningIcon, TempIcon } from './UI';
@@ -611,7 +612,7 @@ function TagList({ items, onAdd, onRemove, placeholder, isAdmin }) {
   );
 }
 
-export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveStage, onReorderStages, catalog=[], onAddBrand, onRemoveBrand, onAddRef, onRemoveRef, onAddYear, onRemoveYear, origins=[], originCats=[], paymentTypes=[], taskTypes=[], lossReasons=[], onAddOrigin, onRemoveOrigin, onAddPaymentType, onRemovePaymentType, onAddTaskType, onRemoveTaskType, onAddLossReason, onRemoveLossReason, onEditLossReason, onAddOriginCat, onRemoveOriginCat, onAddOriginItem, onRemoveOriginItem, onUpdateOriginColor, enabledWidgets=[], onToggleWidget, currentUserRole='vendedor' }) {
+export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveStage, onReorderStages, catalog=[], onAddBrand, onRemoveBrand, onAddRef, onRemoveRef, onAddYear, onRemoveYear, origins=[], originCats=[], paymentTypes=[], taskTypes=[], lossReasons=[], onAddOrigin, onRemoveOrigin, onAddPaymentType, onRemovePaymentType, onAddTaskType, onRemoveTaskType, onAddLossReason, onRemoveLossReason, onEditLossReason, onAddOriginCat, onRemoveOriginCat, onAddOriginItem, onRemoveOriginItem, onUpdateOriginColor, enabledWidgets=[], onToggleWidget, currentUserRole='vendedor', bodegas=[], gerentesOptions=[], users=[], onAddBodega, onRemoveBodega, onRenameBodega, onAddSede, onUpdateSede, onRemoveSede }) {
   const [label, setLabel] = useState('');
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);
@@ -648,6 +649,14 @@ export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveSta
           <TagList items={paymentTypes} onAdd={onAddPaymentType} onRemove={onRemovePaymentType} placeholder="Nueva forma de pago..." isAdmin={isAdmin}/>
         </ConfigCard>
       </div>
+
+      {/* Bodegas y Sedes */}
+      {isAdmin&&(
+        <ConfigCard title="🏭 Bodegas y Sedes">
+          <p style={{ fontSize:12, color:'var(--text-3)', marginBottom:18, lineHeight:1.5 }}>Gestiona las bodegas de la empresa y sus sedes. Cada sede puede tener un gerente asignado y los usuarios se vinculan a una sede.</p>
+          <BodegasSettings bodegas={bodegas} gerentesOptions={gerentesOptions} isAdmin={isAdmin} users={users} onAddBodega={onAddBodega} onRemoveBodega={onRemoveBodega} onRenameBodega={onRenameBodega} onAddSede={onAddSede} onUpdateSede={onUpdateSede} onRemoveSede={onRemoveSede}/>
+        </ConfigCard>
+      )}
 
       {/* Catalog */}
       {isAdmin&&(
