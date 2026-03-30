@@ -88,7 +88,7 @@ function LossReasonModal({ onConfirm, onCancel, lossReasons=[] }) {
 }
 
 // ── CLIENT MODAL ─────────────────────────────────────────────────────────────
-export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], paymentTypes=[], taskTypes=[], lossReasons=[], onClose, onSave, onDelete, onAddNote, onMoveClient, onAddTask, onToggleTask, onDeleteTask, onEditTask, canDelete=true }) {
+export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], originCats=[], flatOrigins=[], paymentTypes=[], taskTypes=[], lossReasons=[], onClose, onSave, onDelete, onAddNote, onMoveClient, onAddTask, onToggleTask, onDeleteTask, onEditTask, canDelete=true }) {
   const [tab,      setTab]      = useState('datos');
   const parsed = parseVehicle(client.vehicle, catalog);
   const [form, setForm] = useState({
@@ -271,7 +271,7 @@ export function ClientModal({ client, stages, catalog=[], allowedBrands=[], isAd
 }
 
 // ── NEW CLIENT MODAL ──────────────────────────────────────────────────────────
-export function NewClientModal({ stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], paymentTypes=[], lossReasons=[], onClose, onCreate }) {
+export function NewClientModal({ stages, catalog=[], allowedBrands=[], isAdmin=false, origins=[], originCats=[], flatOrigins=[], paymentTypes=[], lossReasons=[], onClose, onCreate }) {
   const [form, setForm] = useState({
     name:'', phone:'', email:'',
     vehicle:'', vehicleSel:{ brandId:'', refId:'' },
@@ -337,8 +337,15 @@ export function NewClientModal({ stages, catalog=[], allowedBrands=[], isAdmin=f
               <div>
                 <label className="field-label">Origen</label>
                 <select style={selStyle} value={form.origin} onChange={e=>set('origin',e.target.value)}>
-                  <option value="">— Seleccionar —</option>
-                  {origins.map(o=><option key={o}>{o}</option>)}
+                  <option value="">— Seleccionar origen —</option>
+                  {originCats.length>0
+                    ? originCats.map(cat=>(
+                        <optgroup key={cat.id} label={cat.name}>
+                          {cat.items.map(item=><option key={item} value={`${cat.name} / ${item}`}>{item}</option>)}
+                        </optgroup>
+                      ))
+                    : origins.map(o=><option key={o}>{o}</option>)
+                  }
                 </select>
               </div>
             </div>

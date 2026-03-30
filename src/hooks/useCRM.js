@@ -96,20 +96,21 @@ export function useCRM(currentUserId) {
     return t;
   }, []);
 
-  const toggleTask = useCallback((clientId, taskId) => {
+  const toggleTask = useCallback((clientId, taskId, completionNote='') => {
     setAllClients(p => p.map(c => {
       if (c.id !== clientId) return c;
       const now = new Date().toISOString();
       const updatedTasks = (c.tasks || []).map(t => {
         if (t.id !== taskId) return t;
         const nowDone = !t.done;
-        return { ...t, done: nowDone, completedAt: nowDone ? now : null };
+        return { ...t, done: nowDone, completedAt: nowDone ? now : null, completionNote: nowDone ? completionNote : '' };
       });
       const task = updatedTasks.find(t => t.id === taskId);
+      const noteText = completionNote ? ` — Nota: "${completionNote}"` : '';
       const historyEntry = task ? {
         from: c.stageId, to: c.stageId, date: now, isTask: true,
         note: task.done
-          ? `✅ Tarea completada: "${task.desc}" (${task.type}) — agendada: ${task.dueDate} ${task.dueTime||''}`
+          ? `✅ Tarea completada: "${task.desc}" (${task.type}) — agendada: ${task.dueDate} ${task.dueTime||''}${noteText}`
           : `↩ Tarea reabierta: "${task.desc}"`,
       } : null;
       return {

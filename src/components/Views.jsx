@@ -2,6 +2,7 @@ import { ExoBtn } from '../App';
 import React, { useState, useMemo } from 'react';
 import { CatalogSettings } from './CatalogSettings';
 import { WidgetSettings } from './DashboardWidgets';
+import { OriginsSettings } from './OriginsSettings';
 import { ORIGINS } from '../data/constants';
 import { formatDate, daysSince, getNextTask, getCreatedDate } from '../utils/helpers';
 import { StagePill, ContactActions, Avatar, TaskWarningIcon, TempIcon } from './UI';
@@ -610,7 +611,7 @@ function TagList({ items, onAdd, onRemove, placeholder, isAdmin }) {
   );
 }
 
-export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveStage, onReorderStages, catalog=[], onAddBrand, onRemoveBrand, onAddRef, onRemoveRef, onAddYear, onRemoveYear, origins=[], paymentTypes=[], taskTypes=[], lossReasons=[], onAddOrigin, onRemoveOrigin, onAddPaymentType, onRemovePaymentType, onAddTaskType, onRemoveTaskType, onAddLossReason, onRemoveLossReason, onEditLossReason, enabledWidgets=[], onToggleWidget, currentUserRole='vendedor' }) {
+export function SettingsView({ stages, clients, isAdmin, onAddStage, onRemoveStage, onReorderStages, catalog=[], onAddBrand, onRemoveBrand, onAddRef, onRemoveRef, onAddYear, onRemoveYear, origins=[], originCats=[], paymentTypes=[], taskTypes=[], lossReasons=[], onAddOrigin, onRemoveOrigin, onAddPaymentType, onRemovePaymentType, onAddTaskType, onRemoveTaskType, onAddLossReason, onRemoveLossReason, onEditLossReason, onAddOriginCat, onRemoveOriginCat, onAddOriginItem, onRemoveOriginItem, onUpdateOriginColor, enabledWidgets=[], onToggleWidget, currentUserRole='vendedor' }) {
   const [label, setLabel] = useState('');
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);

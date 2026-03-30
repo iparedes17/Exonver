@@ -5,6 +5,55 @@ import { DatePicker, TimePicker } from './DateTimePicker';
 import { isTaskOverdue, minutesUntilTask, formatDateTime } from '../utils/helpers';
 import { TaskCheck } from './UI';
 
+// ── COMPLETION NOTE MODAL ─────────────────────────────────────────────────────
+function CompletionNoteModal({ task, onConfirm, onCancel }) {
+  const [note, setNote] = React.useState('');
+  const [err,  setErr]  = React.useState(false);
+  const neu = {
+    width:'100%', padding:'10px 14px', background:'#141720',
+    boxShadow:'inset -2px -2px 6px rgba(255,255,255,0.03),inset 2px 2px 8px rgba(0,0,0,0.5)',
+    border:'1px solid rgba(255,255,255,0.07)', borderRadius:12,
+    color:'#e8eaf0', fontSize:13, fontFamily:'DM Sans,sans-serif', outline:'none',
+    resize:'vertical', minHeight:80,
+  };
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(10,12,22,0.88)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}
+      onClick={e=>e.target===e.currentTarget&&onCancel()}>
+      <div className="slide-up" style={{ background:'#1e2333', boxShadow:'-8px -8px 20px rgba(255,255,255,0.04),8px 8px 28px rgba(0,0,0,0.8)', border:'1px solid rgba(74,222,128,0.25)', borderRadius:20, width:'100%', maxWidth:420, padding:26 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+          <span style={{ fontSize:20 }}>✅</span>
+          <div style={{ fontSize:15, fontWeight:700 }}>Marcar tarea como completada</div>
+        </div>
+        <div style={{ fontSize:12, color:'var(--text-3)', marginBottom:18 }}>
+          <strong style={{ color:'var(--text-2)' }}>{task.type}: {task.desc}</strong>
+        </div>
+        <div style={{ marginBottom:18 }}>
+          <label style={{ display:'block', fontSize:10, fontWeight:700, color: err?'#f87171':'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:7 }}>
+            {err ? '⚠ La nota es obligatoria' : 'Nota de gestión *'}
+          </label>
+          <textarea
+            style={{ ...neu, border: err?'1px solid rgba(248,113,113,0.5)':'1px solid rgba(255,255,255,0.07)' }}
+            value={note}
+            onChange={e=>{ setNote(e.target.value); setErr(false); }}
+            placeholder="¿Qué resultado tuvo esta gestión? ¿Próximos pasos?..."
+            autoFocus
+          />
+        </div>
+        <div style={{ display:'flex', gap:10, justifyContent:'flex-end' }}>
+          <button onClick={onCancel} style={{ padding:'9px 18px', borderRadius:10, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.6)', cursor:'pointer', fontFamily:'DM Sans,sans-serif', fontSize:13 }}>Cancelar</button>
+          <button
+            onClick={()=>{ if(!note.trim()){ setErr(true); return; } onConfirm(note.trim()); }}
+            style={{ padding:'9px 22px', borderRadius:10, background:'linear-gradient(135deg,#16a34a,#15803d)', border:'1px solid rgba(74,222,128,0.4)', color:'#fff', cursor:'pointer', fontFamily:'DM Sans,sans-serif', fontSize:13, fontWeight:700, boxShadow:'0 0 14px rgba(74,222,128,0.2)' }}
+          >
+            ✅ Completar tarea
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 function EditTaskForm({ task, taskTypes=DEFAULT_TASK_TYPES, onSave, onCancel }) {
   const TASK_TYPES = taskTypes;
@@ -75,6 +124,7 @@ function EditTaskForm({ task, taskTypes=DEFAULT_TASK_TYPES, onSave, onCancel }) 
 }
 
 function TaskItem({ task, onToggle }) {
+  const [showNote, setShowNote] = React.useState(false);
   const overdue  = isTaskOverdue(task);
   const diffMin  = minutesUntilTask(task);
   const upcoming = !task.done && diffMin >= 0 && diffMin <= (task.reminderMin || 30);
@@ -90,11 +140,12 @@ function TaskItem({ task, onToggle }) {
     <div style={{ marginBottom:10 }}>
       <div style={{ padding:'12px 14px', background:'var(--bg-deep)', boxShadow:'var(--neu-inset)', border:'1px solid '+borderColor, borderRadius:12, transition:'all .2s', opacity: task.done ? 0.6 : 1 }}>
         <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
-          {/* Checkbox — disabled if locked (overdue & not done) */}
+          {/* Checkbox — shows note modal when marking done */}
+          {showNote && <CompletionNoteModal task={task} onConfirm={note=>{ onToggle(note); setShowNote(false); }} onCancel={()=>setShowNote(false)}/>}
           <div
             className={task.done ? 'task-check done' : 'task-check'}
-            onClick={onToggle}
-            title={overdue && !task.done ? 'Tarea vencida — marcar igual como hecha' : task.done ? 'Marcar como pendiente' : 'Marcar como hecha'}
+            onClick={task.done ? onToggle : ()=>setShowNote(true)}
+            title={task.done ? 'Desmarcar tarea' : overdue ? 'Tarea vencida — registrar gestión' : 'Marcar como completada'}
             style={{ cursor:'pointer', opacity:1 }}
           >
             {task.done && <span style={{ fontSize:11, color:'#fff', fontWeight:700 }}>✓</span>}
@@ -120,6 +171,7 @@ function TaskItem({ task, onToggle }) {
               </span>
               <span style={{ fontSize:11, color:'var(--text-3)' }}>⏰ {task.reminderMin} min antes</span>
               {task.done && task.completedAt && <span style={{ fontSize:11, color:'#4ade80' }}>✓ {formatDateTime(task.completedAt)}</span>}
+              {task.done && task.completionNote && <div style={{ fontSize:11, color:'rgba(74,222,128,0.7)', marginTop:4, fontStyle:'italic' }}>💬 "{task.completionNote}"</div>}
             </div>
           </div>
         </div>
@@ -193,7 +245,7 @@ export function TasksPanel({ client, taskTypes, onAddTask, onToggleTask }) {
       )}
 
       {pending.map(t => (
-        <TaskItem key={t.id} task={t} onToggle={() => onToggleTask(client.id, t.id)}/>
+        <TaskItem key={t.id} task={t} onToggle={(note='')=>onToggleTask(client.id, t.id, note)}/>
       ))}
 
       {done.length > 0 && (
@@ -202,7 +254,7 @@ export function TasksPanel({ client, taskTypes, onAddTask, onToggleTask }) {
             Tareas completadas
           </div>
           {done.map(t => (
-            <TaskItem key={t.id} task={t} onToggle={() => onToggleTask(client.id, t.id)}/>
+            <TaskItem key={t.id} task={t} onToggle={(note='')=>onToggleTask(client.id, t.id, note)}/>
           ))}
         </div>
       )}
